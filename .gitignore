@@ -1,0 +1,28 @@
+# 运行时数据与本地测试产物（绝不进入交付物/版本库）
+v3-client-config.json
+build/bin/recordings/
+build/bin/v3-client-config.json
+server/server.db
+server/*.db
+
+# 敏感文件：测试激活码（绝不能进 GitHub）
+.e2e-code.txt
+*.code.txt
+
+# 空文件/占位
+sub
+
+# 构建产物
+client/frontend/dist/
+client/frontend/wailsjs/
+client/frontend/package.json.md5
+client/build/bin/*.exe
+server/server.exe
+server/server
+
+# 依赖目录（绝不入库）
+node_modules/
+
+# 临时文件
+*.log
+.tmp/

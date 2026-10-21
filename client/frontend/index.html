@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>抖音直播录制工具</title>
+</head>
+<body>
+<div id="app">
+    <div class="titlebar">
+        <div class="logo">抖</div>
+        <div>
+            <div class="title">抖音直播录制工具</div>
+            <div class="sub">FLV 原画直录 · 零转码</div>
+        </div>
+    </div>
+
+    <!-- 激活面板：未激活时显示，覆盖主界面 -->
+    <div class="activate-wrap hidden" id="activateWrap">
+        <div class="activate-card">
+            <div class="act-logo">抖</div>
+            <div class="act-title">激活授权</div>
+            <div class="act-desc">本工具需要有效的激活码才能使用。<br/>请联系管理员获取激活码。</div>
+            <input class="input" id="actCode" type="text" placeholder="输入激活码，如 DREC-XXXX-XXXX-XXXX" autocomplete="off"/>
+            <input class="input" id="actServer" type="text" placeholder="服务器地址（默认 http://111.170.152.215:18080）" autocomplete="off"/>
+            <button class="btn primary act-btn" id="actBtn">激活</button>
+            <div class="act-msg" id="actMsg"></div>
+            <div class="act-hint">激活成功后即可解析并本地录制直播</div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="input-row">
+            <input class="input" id="url" type="text" placeholder="粘贴直播间链接，如 https://live.douyin.com/1234567890" autocomplete="off"/>
+            <button class="btn primary" id="parseBtn">解析</button>
+        </div>
+
+        <div class="card hidden" id="infoCard">
+            <div class="host">
+                <div class="avatar" id="avatar">?</div>
+                <div>
+                    <div class="hname" id="anchorName">—</div>
+                    <div class="hsub" id="liveStatus"><span class="live-dot"></span>正在直播</div>
+                </div>
+            </div>
+            <div class="stats">
+                <div class="stat"><div class="num" id="roomId">—</div><div class="lbl">房间号</div></div>
+                <div class="stat"><div class="num" id="curQuality">—</div><div class="lbl">当前画质</div></div>
+                <div class="stat"><div class="num" id="recTime">00:00</div><div class="lbl">已录制</div></div>
+            </div>
+            <div class="q" id="qualityList"></div>
+            <div class="rec">
+                <button class="rec-btn" id="recBtn">开<br>始</button>
+                <div class="rec-info">
+                    <div class="bar"><div class="bar-in" id="barIn"></div></div>
+                    <div class="meta">
+                        <span id="metaLeft">就绪</span>
+                        <span id="metaRight"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="log" id="log"><span class="dim">准备就绪 — 输入直播间链接后点击「解析」</span></div>
+    </div>
+</div>
+<script src="./src/main.js" type="module"></script>
+</body>
+</html>
