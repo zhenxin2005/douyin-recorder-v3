@@ -23,6 +23,14 @@ server/server
 # 依赖目录（绝不入库）
 node_modules/
 
+# Xuanji 运行时文件（会话快照/待办，不进版本库；.xuanji/docs 文档保留）
+.xuanji/sessions/
+.xuanji/writeback.json
+
+# Xuanji 运行时文件（会话快照/待办，不进版本库；.xuanji/docs 文档保留）
+.xuanji/sessions/
+.xuanji/writeback.json
+
 # 临时文件
 *.log
 .tmp/
