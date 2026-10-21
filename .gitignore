@@ -1,7 +1,8 @@
 # 运行时数据与本地测试产物（绝不进入交付物/版本库）
 v3-client-config.json
-build/bin/recordings/
-build/bin/v3-client-config.json
+client/build/bin/recordings/
+**/recordings/
+client/build/bin/v3-client-config.json
 server/server.db
 server/*.db
 
@@ -22,10 +23,6 @@ server/server
 
 # 依赖目录（绝不入库）
 node_modules/
-
-# Xuanji 运行时文件（会话快照/待办，不进版本库；.xuanji/docs 文档保留）
-.xuanji/sessions/
-.xuanji/writeback.json
 
 # Xuanji 运行时文件（会话快照/待办，不进版本库；.xuanji/docs 文档保留）
 .xuanji/sessions/
