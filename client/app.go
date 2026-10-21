@@ -55,33 +55,26 @@ func (a *App) ensureConfig() {
 	}
 }
 
-// GetActivationStatus 返回激活状态（前端启动时调用）
+// GetActivationStatus 返回激活状态（前端启动时调用）；不暴露服务器地址
 func (a *App) GetActivationStatus() map[string]interface{} {
 	a.ensureConfig()
 	activated := a.api != nil && a.config.Token != ""
-	serverURL := a.config.ServerURL
-	if serverURL == "" {
-		serverURL = defaultServerURL
-	}
 	return map[string]interface{}{
-		"activated":  activated,
-		"server_url": serverURL,
-		"device_id":  a.config.DeviceID,
+		"activated": activated,
+		"device_id": a.config.DeviceID,
 	}
 }
 
 // Activate 激活：激活码 → 服务器注册 → 保存 token → 初始化 api 客户端
 // 设备 ID 首次生成后固定（同一台机器重新激活绑定同一设备）
-func (a *App) Activate(code, serverURL string) error {
+// 服务器地址内置（defaultServerURL），不在界面暴露
+func (a *App) Activate(code string) error {
 	a.ensureConfig()
 	code = strings.ToUpper(strings.TrimSpace(code))
 	if code == "" {
 		return fmt.Errorf("请输入激活码")
 	}
-	serverURL = strings.TrimSpace(serverURL)
-	if serverURL == "" {
-		serverURL = defaultServerURL
-	}
+	serverURL := defaultServerURL
 
 	// 复用已有设备ID，避免换绑产生新设备
 	deviceID := a.config.DeviceID

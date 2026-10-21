@@ -56,3 +56,33 @@
 - **解法**：本地 `tar -czf deploy.tar.gz` 打包 → `scp` 上传单文件（二进制安全通道）→ 远端解包编译。
 - **教训**：PowerShell 里跨进程管道传二进制必须显式绕过文本编码（或用 scp/robocopy 等专用通道），不要赌管道透明。
 - **教训**：测未导出函数 = 测试文件放同包；测导出 API = 放外部包。放错位置编译期就报错，不是运行期问题。
+
+## 11. GitHub 推送：本机 22 端口被拒 → SSH over HTTPS 443（2026-10-21）
+- **现象**：`git push` / `ssh -T git@github.com` 报连接失败（本网络 GitHub 22 端口被拒连），但 HTTPS API 正常。
+- **解法**：`~/.ssh/config` 加别名，把 github.com 映射到 `ssh.github.com:443`（GitHub 官方 SSH over HTTPS 端口），公钥认证照常：
+  ```
+  Host github.com
+      HostName ssh.github.com
+      Port 443
+      User git
+      IdentityFile ~/.ssh/id_ed25519
+      StrictHostKeyChecking accept-new
+  ```
+  配置后 `git push` 无需任何额外参数。
+- **附带坑**：MinGit 便携版缺 `ssh-keygen`/`less` → 用系统 OpenSSH（C:\Windows\System32\OpenSSH）生成密钥，`git config core.pager cat` 解决分页器缺失。
+- **教训**：GitHub 不允许 push 到不存在的远端仓库（404）——推送前先 `curl api.github.com/repos/<owner>/<repo>` 确认存在；首次 commit 前确认 .gitignore 覆盖所有运行时/敏感目录（本次误跟踪了 .xuanji/sessions 会话快照与录制 FLV，用 `git rm --cached` 补救，本地文件保留）。
+
+## 11. GitHub 推送：22 端口被拒 → SSH over HTTPS 443（2026-10-21）
+- **现象**：`git push` / `ssh -T git@github.com` 报 `Connection refused` / 连接超时（当前网络环境 GitHub 22 端口被拒连），但 HTTPS 网页/API 正常。
+- **解法**：在 `~/.ssh/config` 加别名把 github.com 映射到 `ssh.github.com:443`（GitHub 官方 SSH over HTTPS 端口），公钥认证照常：
+  ```
+  Host github.com
+      HostName ssh.github.com
+      Port 443
+      User git
+      IdentityFile ~/.ssh/id_ed25519
+      StrictHostKeyChecking accept-new
+  ```
+  之后 `git push` 无需任何额外参数即可走 443。
+- **补充**：便携版 MinGit（D:\tools\MinGit）缺 `ssh-keygen`/`less`——生成密钥用系统 OpenSSH（C:\Windows\System32\OpenSSH），并 `git config core.pager cat` 避免缺分页器报错；gh CLI 在本网络下载 GitHub release CDN 停滞 → 弃用，改用 SSH key + 网页建仓。
+- **教训**：推送前检查远端仓库是否已创建（`curl api.github.com/repos/<owner>/<repo>` 404 = 不存在，GitHub 不允许 push 到不存在的仓库）；首次 commit 前先确认 .gitignore 覆盖所有运行时/敏感目录（本次误跟踪了 .xuanji/sessions 会话快照与录制 FLV，靠 `git rm --cached` 补救，本地文件保留）。

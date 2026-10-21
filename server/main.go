@@ -142,6 +142,7 @@ func main() {
 	// 管理接口（需 X-Admin-Key）：生成激活码 / 查看列表
 	mux.HandleFunc("/api/admin/gencode", handleAdminGenCode(store))
 	mux.HandleFunc("/api/admin/list", handleAdminList(store))
+	mux.HandleFunc("/api/admin/revoke", handleAdminRevoke(store))
 
 	// 监听端口支持环境变量 DREC_ADDR（默认 :8080；公网部署可用高位端口绕开 ICP 拦截）
 	addr := os.Getenv("DREC_ADDR")

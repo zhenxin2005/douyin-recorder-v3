@@ -10,6 +10,9 @@ server/*.db
 .e2e-code.txt
 *.code.txt
 
+# 管理密钥（本地脚本读取，绝不进 GitHub）
+admin/admin-key.txt
+
 # 空文件/占位
 sub
 
@@ -24,9 +27,10 @@ server/server
 # 依赖目录（绝不入库）
 node_modules/
 
-# Xuanji 运行时文件（会话快照/待办，不进版本库；.xuanji/docs 文档保留）
+# Xuanji 运行时文件（会话快照/待办/临时驱动，不进版本库；.xuanji/docs 文档保留）
 .xuanji/sessions/
 .xuanji/writeback.json
+.xuanji/tmp/
 
 # 临时文件
 *.log

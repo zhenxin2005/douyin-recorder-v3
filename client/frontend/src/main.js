@@ -22,7 +22,6 @@ const logBox = document.getElementById('log');
 // 激活面板
 const activateWrap = document.getElementById('activateWrap');
 const actCode = document.getElementById('actCode');
-const actServer = document.getElementById('actServer');
 const actBtn = document.getElementById('actBtn');
 const actMsg = document.getElementById('actMsg');
 
@@ -215,11 +214,8 @@ async function checkActivation() {
             activateWrap.classList.add('hidden');
             return;
         }
-        // 未激活：显示面板，填充默认服务器地址
+        // 未激活：显示面板（服务器地址已内置，无需填写）
         activateWrap.classList.remove('hidden');
-        if (!actServer.value.trim()) {
-            actServer.value = st && st.server_url ? st.server_url : 'http://111.170.152.215:18080';
-        }
         actCode.focus();
     } catch (err) {
         log(`✗ 激活状态检查失败：${String(err && err.message ? err.message : err)}`, 'err');
@@ -240,23 +236,13 @@ async function handleActivate() {
         actMsg.className = 'act-msg err';
         return;
     }
-    // 服务器地址校验：必须是合法 http(s) URL
-    let serverURL = actServer.value.trim();
-    try {
-        const u = new URL(serverURL);
-        if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error();
-        serverURL = u.origin;
-    } catch (e) {
-        actMsg.textContent = '服务器地址格式不正确（应为 http:// 或 https:// 开头）';
-        actMsg.className = 'act-msg err';
-        return;
-    }
+    // 服务器地址已内置在客户端，无需用户填写
     actBtn.disabled = true;
     actBtn.textContent = '激活中…';
     actMsg.className = 'act-msg';
     actMsg.textContent = '';
     try {
-        await Activate(code, serverURL);
+        await Activate(code);
         actMsg.textContent = '✓ 激活成功';
         actMsg.className = 'act-msg ok';
         activateWrap.classList.add('hidden');

@@ -34,6 +34,10 @@ D:\douyin-recorder-v3
 │   ├── internal\apiclient\    # 服务器 API 客户端（HMAC 签名/激活/token 本地持久化 + e2e 测试）
 │   ├── internal\recorder\     # 本地 FLV 直录（从版本2复制）
 │   └── frontend\              # 仿版本2 Dark Mode 界面 + 激活面板
+├── admin\                      # 激活码管理脚本（方案 B：本地脚本 + 服务器接口）
+│   ├── drec-admin.ps1         # 菜单式：1生成/2查看/3禁用（密钥读同目录 admin-key.txt）
+│   ├── drec-admin.bat         # 双击包装
+│   └── admin-key.txt          # 管理密钥（.gitignore 排除，不提交）
 └── README.md
 ```
 
@@ -46,6 +50,7 @@ D:\douyin-recorder-v3
 | POST | /api/parse | X-Token + X-Timestamp + X-Nonce + X-Sign | 解析直播间，返回流地址/画质 |
 | POST | /api/admin/gencode | X-Admin-Key（环境变量 DREC_ADMIN_KEY） | 生成激活码 |
 | POST | /api/admin/list | X-Admin-Key | 查看激活码与绑定设备 |
+| POST | /api/admin/revoke | X-Admin-Key | 禁用激活码（已绑定设备立即失效，同码不可再注册） |
 
 **签名规则**（客户端 apiclient 与服务端 signature.go 严格一致）：
 `msg = method\npath\ntimestamp\nnonce\nsha256hex(body)`；`sign = HMAC-SHA256(key=token, msg)`。
@@ -53,8 +58,8 @@ D:\douyin-recorder-v3
 ## 客户端激活流程
 
 1. 启动 → `GetActivationStatus()` 检查本地配置（token 存在=已激活）
-2. 未激活 → 显示激活面板（输入激活码 + 服务器地址，默认 http://localhost:8080）
-3. `Activate(code, serverURL)` → POST /api/register → 保存 token 到 `v3-client-config.json`（exe 同目录）
+2. 未激活 → 显示激活面板（**只输入激活码，服务器地址内置隐藏，客户端界面不显示服务器 IP**）
+3. `Activate(code)` → POST /api/register → 保存 token 到 `v3-client-config.json`（exe 同目录）
 4. 激活后 `Parse(url)` → 签名调服务器 /api/parse → 本地 recorder 直录
 
 ## 构建命令
@@ -88,8 +93,12 @@ wails build
   - Frontend：录制中断 UI 复位 · 激活码/URL 输入校验 · 恒 100% 进度条移除 · 日志上限/轮询 1000ms
   - 验证：server/client go vet + build 0 告警；SSRF/panic/防覆盖回归测试 PASS；本地 e2e PASS（激活→签名解析→错误 token 401）；wails build 打包成功
 - [x] **修复版部署生产 + 全链路验证 PASS（2026-10-21 18:09）**：tar.gz 上传 → 服务器编译（17.3MB）→ 备份旧版 server.bak → systemd 重启 → 生产验证：health 200 / gencode 200 / register 200 / SSRF（evil.com 被拒「URL 格式不正确」）/ 合法 URL 鉴权通过 / 错误 token 401。旧二进制已备份 `server.bak.20261021101952`（回滚用）
+- [x] **推送到 GitHub 完成（2026-10-21 21:10）**：仓库 https://github.com/zhenxin2005/douyin-recorder-v3（public）· SSH ed25519 认证（zhenxin2005 账号）· 本机 22 端口被拒 → 走 SSH over HTTPS 443（~/.ssh/config: Host github.com → ssh.github.com:443）· 推送前已排除 .xuanji/sessions、测试激活码、录制 FLV、config 等敏感/运行时文件 · 远端 master 与本地同步（a346262）
+- [x] **推送到 GitHub 完成（2026-10-21 21:10）**：远端 https://github.com/zhenxin2005/douyin-recorder-v3（public）· SSH ed25519 认证（zhenxin2005 账号）· 本机 22 端口被拒 → SSH over HTTPS 443（~/.ssh/config: Host github.com → ssh.github.com:443）· 已排除 .xuanji/sessions、测试激活码、录制 FLV、config 等敏感/运行时文件后推送 · 远端 master 与本地同步（a346262）
+- [x] **激活码管理功能完成（2026-10-21 22:19）**：服务器新增 /api/admin/revoke（禁用后已绑定设备立即失效、同码不可再注册）；客户端隐藏服务器 IP（激活面板只输激活码）；管理脚本 admin/drec-admin.ps1（生成/查看/禁用，密钥读本地 admin-key.txt）
+- [x] **生产部署 + revoke 全链路验证 PASS（2026-10-21 22:19）**：源码同步（verifySignature 三参一致）→ 服务器编译 → 备份 server.bak.20261021135652 → systemd 重启 → 生产验证：health 200 / revoke 空码 401 / 发码→注册→禁用→已激活设备 parse 403→同码再注册被拒
+- [x] **管理脚本真实调用生产 PASS（2026-10-21 22:19）**：gencode → list unused → revoke → 复核 revoked
 - [ ] 付费模式（订阅制 vs 按次）尚未最终定
-- [ ] 管理面板（发码界面）待定
 
 ## 部署环境备忘（2026-10-21）
 
@@ -98,7 +107,7 @@ wails build
 | 服务器 | 111.170.152.215（阿里云 ECS，Ubuntu 22.04，4核 3.8G） |
 | 服务 | systemd `douyin-recorder-v3`（/opt/douyin-recorder-v3/server/server） |
 | 监听端口 | **:18080**（8080 被阿里云 ICP 备案拦截，18080 放行） |
-| 管理密钥 | 环境变量 DREC_ADMIN_KEY（systemd unit 内），生成激活码需 X-Admin-Key 头 |
+| 管理密钥 | 环境变量 DREC_ADMIN_KEY（systemd unit 内）+ 服务器 .admin_key；本地镜像 admin/admin-key.txt（.gitignore 排除，不入库） |
 | SSH | **仅 ed25519 密钥登录**，密码登录已关闭；私钥 `C:\Users\Administrator\.ssh\douyin_recorder_ed25519`（务必保存，丢失即无法登录） |
 | 客户端连接地址 | 前端默认值已改为 `http://111.170.152.215:18080`（index.html + main.js），开箱即用 |
 | 端口支持 | server 支持 `DREC_ADDR` 环境变量改监听端口；e2e_test 支持 `DREC_TEST_SERVER` |

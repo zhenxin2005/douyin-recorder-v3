@@ -124,6 +124,12 @@ func (s *Store) MarkCodeUsed(code string) error {
 	return err
 }
 
+// RevokeCode 禁用激活码：置为 revoked 后，已绑定设备的下一次请求将因 IsValid()==false 被拒
+func (s *Store) RevokeCode(code string) error {
+	_, err := s.db.Exec(`UPDATE activation_codes SET status = 'revoked' WHERE code = ?`, code)
+	return err
+}
+
 func (s *Store) CountDevices(code string) (int, error) {
 	var n int
 	err := s.db.QueryRow(`SELECT COUNT(*) FROM devices WHERE code = ?`, code).Scan(&n)

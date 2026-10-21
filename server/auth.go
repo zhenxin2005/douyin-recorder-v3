@@ -171,3 +171,40 @@ func handleAdminList(store *Store) http.HandlerFunc {
 		writeJSON(w, http.StatusOK, map[string]interface{}{"codes": codes})
 	}
 }
+
+// handleAdminRevoke 管理接口：禁用激活码（需 X-Admin-Key 头）
+func handleAdminRevoke(store *Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+			return
+		}
+		// 管理接口按 IP 限流：30 次/分钟（防 X-Admin-Key 暴力破解）
+		if !adminLimiter.Allow("admin:"+clientIP(r)) {
+			writeJSON(w, http.StatusTooManyRequests, map[string]string{"error": "请求过于频繁，请稍后再试"})
+			return
+		}
+		if !checkAdminKey(r) {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "管理密钥错误"})
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+		var req struct {
+			Code string `json:"code"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "无效请求体"})
+			return
+		}
+		req.Code = strings.ToUpper(strings.TrimSpace(req.Code))
+		if req.Code == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "缺少 code"})
+			return
+		}
+		if err := store.RevokeCode(req.Code); err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "操作失败"})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]interface{}{"revoked": req.Code})
+	}
+}
